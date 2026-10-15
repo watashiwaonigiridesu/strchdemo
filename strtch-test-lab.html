@@ -1,0 +1,639 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+</head>
+<body>
+<title>strtch Test Lab</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: phone on the left runs the app; JSON workbench on the right reads and writes the same data. Stacks on phones. */
+:root {
+  --page: #E7E3D5; --page-ink: #24261E; --page-soft: #6A6C5C; --panel: #F7F5EE; --panel-line: #D3CFBF;
+  --code-bg: #FBFAF5; --ok: #2F6B3A; --bad: #A4402A; --warn-bg: #F4E3CF;
+  --sage-100: #EEF2E6; --sage-200: #DEE6D2; --forest-700: #2C4A30; --forest-800: #1E3423;
+  --ink: #202B1D; --ink-soft: #5E6A54; --clay-500: #BE6C46; --clay-100: #F1DBC9; --line: #D5DCC7; --card: #FCFBF7;
+  --f-display: 'Caveat', 'Segoe Print', cursive;
+  --f-body: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --f-mono: 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --page: #16170F; --page-ink: #ECEADF; --page-soft: #A5A795; --panel: #1F2118; --panel-line: #34372A;
+  --code-bg: #191B13; --ok: #8CC497; --bad: #E48A72; --warn-bg: #3A2C1E; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --page: #16170F; --page-ink: #ECEADF; --page-soft: #A5A795; --panel: #1F2118; --panel-line: #34372A;
+  --code-bg: #191B13; --ok: #8CC497; --bad: #E48A72; --warn-bg: #3A2C1E; color-scheme: dark; }
+
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--page); color: var(--page-ink); font-family: var(--f-body); font-size: 14px; }
+button, input, textarea { font: inherit; }
+:focus-visible { outline: 2px solid var(--clay-500); outline-offset: 2px; }
+
+.wrap { max-width: 1120px; margin: 0 auto; padding-block: 28px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 24px; margin-bottom: 22px; }
+.brand { font-family: var(--f-display); font-weight: 700; font-size: 46px; line-height: .9; color: var(--page-ink); margin: 0; }
+.brand small { font-family: var(--f-body); font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--page-soft); margin-left: 8px; }
+.top p { margin: 6px 0 0; color: var(--page-soft); max-width: 58ch; line-height: 1.5; }
+.speed { display: flex; align-items: center; gap: 8px; color: var(--page-soft); font-size: 12px; font-weight: 600; }
+.seg { display: inline-flex; border: 1px solid var(--panel-line); border-radius: 10px; overflow: hidden; background: var(--panel); }
+.seg button { border: 0; background: none; padding: 6px 11px; color: var(--page-ink); cursor: pointer; font-weight: 600; font-size: 12px; font-variant-numeric: tabular-nums; }
+.seg button[aria-pressed="true"] { background: var(--forest-700); color: #F3F6EE; }
+
+.layout { display: grid; grid-template-columns: 372px minmax(0, 1fr); gap: 32px; align-items: start; }
+@media (max-width: 860px) { .layout { grid-template-columns: minmax(0, 1fr); } .phone { margin: 0 auto; } }
+
+/* ---------- phone ---------- */
+.phone { width: 372px; max-width: 100%; aspect-ratio: 372 / 760; background: #14170F; border-radius: 48px; padding: 12px;
+  box-shadow: 0 30px 60px -24px rgba(10,12,6,.5); position: relative; }
+.phone::before { content: ""; position: absolute; top: 22px; left: 50%; transform: translateX(-50%); width: 86px; height: 20px; background: #14170F; border-radius: 12px; z-index: 5; }
+.pi { background: var(--sage-100); color: var(--ink); width: 100%; height: 100%; border-radius: 36px; overflow: hidden; display: flex; flex-direction: column; }
+.statusbar { height: 42px; flex-shrink: 0; }
+.screen { flex: 1; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; }
+.screen::-webkit-scrollbar { display: none; }
+.tabbar { flex-shrink: 0; display: flex; justify-content: space-around; padding: 9px 8px 14px; background: var(--card); border-top: 1px solid var(--line); }
+.tabbar button { background: none; border: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 600; color: var(--ink-soft); cursor: pointer; padding: 4px 12px; }
+.tabbar button.active { color: var(--forest-700); }
+.tabbar svg { width: 20px; height: 20px; }
+
+.pad { padding: 16px 20px 28px; display: flex; flex-direction: column; }
+.eyebrow { font-size: 12.5px; color: var(--ink-soft); margin: 0 0 2px; }
+.hero { font-family: var(--f-display); font-weight: 700; font-size: 40px; line-height: .95; color: var(--forest-800); margin: 0 0 8px; text-wrap: balance; }
+.sub { font-size: 13.5px; color: var(--ink-soft); line-height: 1.5; margin: 0 0 18px; max-width: 30ch; }
+.btn { border: 0; border-radius: 16px; font-weight: 700; font-size: 14.5px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: transform .12s; }
+.btn:active { transform: scale(.97); }
+.btn-primary { width: 100%; background: var(--forest-700); color: #F3F6EE; padding: 15px 18px; box-shadow: 0 8px 18px -8px rgba(44,74,48,.55); }
+.btn-primary[disabled] { opacity: .5; cursor: default; }
+.btn-row { display: flex; gap: 10px; margin-top: 10px; }
+.btn-sec { flex: 1; background: var(--card); border: 1.5px solid var(--line); color: var(--forest-800); padding: 12px 8px; font-size: 12.5px; }
+.btn-sec[disabled] { opacity: .5; cursor: default; }
+.label { font-size: 12px; font-weight: 700; color: var(--ink-soft); margin: 24px 0 10px; display: flex; justify-content: space-between; }
+.back { background: none; border: 0; cursor: pointer; color: var(--ink-soft); display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; padding: 2px 0 10px; align-self: flex-start; }
+.back svg { width: 15px; height: 15px; }
+
+.rlist { display: flex; flex-direction: column; gap: 10px; }
+.rcard { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 12px 13px; display: flex; align-items: center; gap: 12px; cursor: pointer; text-align: left; width: 100%; color: inherit; }
+.rcard:active { transform: scale(.985); }
+.sw { width: 42px; height: 42px; border-radius: 12px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: var(--forest-700); }
+.sw svg { width: 26px; height: 26px; }
+.rmeta { flex: 1; min-width: 0; }
+.rtitle { font-weight: 700; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rsub { font-size: 11.5px; color: var(--ink-soft); margin-top: 1px; }
+.go { width: 30px; height: 30px; border-radius: 999px; background: var(--sage-200); display: flex; align-items: center; justify-content: center; color: var(--forest-700); flex-shrink: 0; }
+.go svg { width: 13px; height: 13px; }
+.empty { border: 1.5px dashed var(--line); border-radius: 16px; padding: 18px; text-align: center; color: var(--ink-soft); font-size: 12.5px; line-height: 1.5; }
+
+/* timer */
+.timer { height: 100%; display: flex; flex-direction: column; background: linear-gradient(180deg, var(--sage-100), var(--sage-200)); }
+.timer-top { padding: 14px 22px 0; display: flex; flex-direction: column; }
+.track { height: 6px; background: rgba(44,74,48,.14); border-radius: 999px; overflow: hidden; margin-bottom: 6px; }
+.fill { height: 100%; background: var(--forest-700); border-radius: 999px; transition: width .3s; }
+.cap { font-size: 11px; color: var(--ink-soft); text-align: right; font-variant-numeric: tabular-nums; }
+.tmid { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4px 20px 0; text-align: center; }
+.ring { position: relative; width: 186px; height: 186px; }
+.ring > svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.ring-bg { fill: none; stroke: rgba(44,74,48,.13); stroke-width: 7; }
+.ring-fg { fill: none; stroke: var(--clay-500); stroke-width: 7; stroke-linecap: round; transition: stroke-dashoffset .25s linear; }
+.ring-fig { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--forest-700); }
+.ring-fig svg { width: 76px; height: 76px; }
+.pname { font-family: var(--f-display); font-weight: 700; font-size: 32px; color: var(--forest-800); margin: 14px 0 0; }
+.pcue { font-size: 12px; color: var(--ink-soft); margin: 2px 0 0; }
+.ptime { font-weight: 800; font-size: 38px; margin: 6px 0 0; letter-spacing: -.5px; font-variant-numeric: tabular-nums; }
+.pnext { font-size: 12px; color: var(--ink-soft); margin-top: 8px; background: rgba(255,255,255,.55); padding: 5px 12px; border-radius: 999px; }
+.ctrls { padding: 10px 20px 22px; display: flex; justify-content: center; gap: 22px; }
+.ccol { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 10px; color: var(--ink-soft); }
+.cbtn { border: 0; background: rgba(255,255,255,.6); width: 46px; height: 46px; border-radius: 999px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--forest-800); }
+.cbtn svg { width: 18px; height: 18px; }
+.cmain { width: 66px; height: 66px; background: var(--forest-700); color: #fff; box-shadow: 0 10px 22px -8px rgba(44,74,48,.55); }
+.cmain svg { width: 24px; height: 24px; }
+
+/* complete */
+.done { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px 24px; text-align: center; }
+.badge { width: 84px; height: 84px; border-radius: 999px; background: var(--clay-100); display: flex; align-items: center; justify-content: center; color: var(--clay-500); margin-bottom: 14px; }
+.badge svg { width: 36px; height: 36px; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 18px 0 16px; width: 100%; }
+.stat { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 12px 4px; }
+.stat b { display: block; font-weight: 800; font-size: 19px; color: var(--forest-800); font-variant-numeric: tabular-nums; }
+.stat span { font-size: 10px; color: var(--ink-soft); }
+
+/* progress */
+.week { display: grid; grid-template-columns: repeat(7, 1fr); margin: 6px 0 20px; }
+.day { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 10px; font-weight: 600; color: var(--ink-soft); }
+.dot { width: 28px; height: 28px; border-radius: 999px; background: var(--sage-200); display: flex; align-items: center; justify-content: center; color: #fff; }
+.day.on .dot { background: var(--forest-700); }
+.day.today span { color: var(--forest-800); text-decoration: underline; text-underline-offset: 3px; }
+.dot svg { width: 13px; height: 13px; }
+.streak { background: var(--forest-800); color: #F3F6EE; border-radius: 18px; padding: 15px 18px; display: flex; align-items: center; gap: 14px; }
+.streak b { font-family: var(--f-display); font-size: 38px; line-height: 1; }
+.streak span { font-size: 11.5px; opacity: .85; line-height: 1.4; }
+.hrow { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.hrow:last-child { border-bottom: 0; }
+.hicon { width: 34px; height: 34px; border-radius: 10px; background: var(--sage-200); display: flex; align-items: center; justify-content: center; color: var(--forest-700); flex-shrink: 0; }
+.hicon svg { width: 20px; height: 20px; }
+.hname { font-size: 13px; font-weight: 700; }
+.hwhen { font-size: 11px; color: var(--ink-soft); }
+
+/* create */
+.field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+.field label { font-size: 12px; font-weight: 700; color: var(--ink-soft); }
+.field input { border: 1.5px solid var(--line); background: var(--card); border-radius: 12px; padding: 11px 12px; color: var(--ink); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { border: 1px solid var(--line); background: var(--card); border-radius: 999px; padding: 6px 10px 6px 6px; display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; font-weight: 600; color: var(--forest-800); cursor: pointer; }
+.chip svg { width: 18px; height: 18px; color: var(--forest-700); }
+.plist { display: flex; flex-direction: column; gap: 8px; margin: 4px 0 14px; }
+.prow { display: flex; align-items: center; gap: 8px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 7px 8px; }
+.prow .n { flex: 1; min-width: 0; font-size: 12.5px; font-weight: 700; }
+.prow input { width: 52px; border: 1px solid var(--line); border-radius: 8px; padding: 5px 6px; text-align: right; background: var(--sage-100); color: var(--ink); font-variant-numeric: tabular-nums; }
+.prow .s { font-size: 11px; color: var(--ink-soft); }
+.x { border: 0; background: none; color: var(--ink-soft); cursor: pointer; font-size: 18px; line-height: 1; padding: 2px 4px; }
+.formerr { color: var(--clay-500); font-size: 12px; font-weight: 600; min-height: 16px; margin-bottom: 8px; }
+
+/* ---------- workbench ---------- */
+.bench { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.panel { background: var(--panel); border: 1px solid var(--panel-line); border-radius: 14px; padding: 16px; min-width: 0; }
+.ph { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 12px; margin-bottom: 10px; }
+.ph h2 { margin: 0; font-size: 15px; font-weight: 800; }
+.ph p { margin: 0; color: var(--page-soft); font-size: 12.5px; }
+.state { font-size: 11.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.state.ok { color: var(--ok); } .state.dirty { color: var(--clay-500); } .state.bad { color: var(--bad); }
+textarea#json { width: 100%; min-height: 380px; resize: vertical; background: var(--code-bg); color: var(--page-ink); border: 1px solid var(--panel-line); border-radius: 10px; padding: 12px; font-family: var(--f-mono); font-size: 12px; line-height: 1.55; tab-size: 2; white-space: pre; overflow: auto; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.tb { border: 1px solid var(--panel-line); background: var(--page); color: var(--page-ink); border-radius: 9px; padding: 8px 12px; font-size: 12.5px; font-weight: 700; cursor: pointer; }
+.tb.primary { background: var(--forest-700); border-color: var(--forest-700); color: #F3F6EE; }
+.tb.file { position: relative; overflow: hidden; }
+.tb.file input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.msg { margin-top: 10px; font-size: 12.5px; line-height: 1.5; }
+.msg.bad { color: var(--bad); } .msg.ok { color: var(--ok); }
+.msg ul { margin: 4px 0 0; padding-left: 18px; }
+.banner { background: var(--warn-bg); border-radius: 9px; padding: 8px 10px; font-size: 12.5px; margin-bottom: 10px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; justify-content: space-between; }
+.log { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; font-size: 12.5px; }
+.log li { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--panel-line); }
+.log li:last-child { border-bottom: 0; }
+.log time { font-family: var(--f-mono); font-size: 11px; color: var(--page-soft); font-variant-numeric: tabular-nums; }
+.schema { font-family: var(--f-mono); font-size: 11.5px; line-height: 1.6; color: var(--page-soft); margin: 0; overflow-x: auto; white-space: pre; }
+.checks { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 6px 18px; margin: 0; padding: 0; list-style: none; font-size: 12.5px; }
+.checks label { display: flex; gap: 8px; align-items: flex-start; cursor: pointer; line-height: 1.4; }
+.checks input { margin-top: 2px; accent-color: var(--forest-700); }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1 class="brand">strtch<small>test lab</small></h1>
+      <p>Use the app on the phone and watch its data change in the JSON panel. Edit the JSON and press Apply to change routines, poses and history in the app.</p>
+    </div>
+    <div class="speed">Timer speed
+      <div class="seg" id="speedSeg">
+        <button type="button" data-speed="1" aria-pressed="true">1×</button>
+        <button type="button" data-speed="5" aria-pressed="false">5×</button>
+        <button type="button" data-speed="20" aria-pressed="false">20×</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <div class="phone">
+      <div class="pi">
+        <div class="statusbar"></div>
+        <div class="screen" id="screen"></div>
+        <nav class="tabbar" id="tabbar">
+          <button type="button" data-tab="home" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v9a1 1 0 001 1h4v-6h4v6h4a1 1 0 001-1v-9"/></svg>Home</button>
+          <button type="button" data-tab="progress"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-5 3 3 5-7"/></svg>Progress</button>
+        </nav>
+      </div>
+    </div>
+
+    <div class="bench">
+      <section class="panel">
+        <div class="ph"><h2>App data (JSON)</h2><span class="state ok" id="jsonState">In sync</span></div>
+        <div class="banner" id="staleBanner" hidden><span>The app changed while you were editing.</span><button type="button" class="tb" id="discardBtn">Discard my edits and show latest</button></div>
+        <textarea id="json" spellcheck="false" aria-label="App data as JSON"></textarea>
+        <div class="actions">
+          <button type="button" class="tb primary" id="applyBtn">Apply to app</button>
+          <button type="button" class="tb" id="formatBtn">Tidy</button>
+          <button type="button" class="tb" id="copyBtn">Copy JSON</button>
+          <span class="tb file">Load .json file<input type="file" id="fileIn" accept=".json,application/json"></span>
+          <button type="button" class="tb" id="resetBtn">Reset to sample</button>
+        </div>
+        <div class="banner" id="resetConfirm" hidden style="margin-top:10px"><span>Replace all routines and history with the sample data?</span><span style="display:flex;gap:6px"><button type="button" class="tb primary" id="resetYes">Reset</button><button type="button" class="tb" id="resetNo">Cancel</button></span></div>
+        <div class="msg" id="jsonMsg" role="status"></div>
+      </section>
+
+      <section class="panel">
+        <div class="ph"><h2>Things to test</h2><p>Tick them off as you go</p></div>
+        <ul class="checks" id="checks">
+          <li><label><input type="checkbox" id="c1">Start a routine from Home and let it finish</label></li>
+          <li><label><input type="checkbox" id="c2">Pause, resume, skip and go back a pose</label></li>
+          <li><label><input type="checkbox" id="c3">Create a new routine and run it</label></li>
+          <li><label><input type="checkbox" id="c4">Check the new session on Progress</label></li>
+          <li><label><input type="checkbox" id="c5">Rename a pose or change its seconds in JSON</label></li>
+          <li><label><input type="checkbox" id="c6">Break the JSON on purpose and read the error</label></li>
+        </ul>
+      </section>
+
+      <section class="panel">
+        <div class="ph"><h2>Activity</h2><p>Latest first</p></div>
+        <ul class="log" id="log"></ul>
+      </section>
+
+      <section class="panel">
+        <div class="ph"><h2>Data shape</h2><p>Pose ids pick the drawing; unknown ids get a default one</p></div>
+        <pre class="schema">{
+  "routines": [{
+    "id": "morning",            // unique text
+    "name": "Morning Mobility",
+    "color": "sage" | "clay",   // card swatch
+    "poses": [{ "pose": "catcow", "name": "Cat–Cow",
+                "cue": "Move slow with your breath", "secs": 20 }]
+  }],
+  "history": [{ "routineId": "morning", "name": "Morning Mobility",
+                "completedAt": "2026-10-15T08:12:00.000Z",
+                "poses": 5, "secs": 125 }]
+}
+pose ids: catcow, childspose, cobra, pigeon, forwardfold,
+          seatedtwist, legsupwall, neckroll, shoulder</pre>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  const ST = 'fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"';
+  const POSES = {
+    catcow: ['Cat–Cow', '<circle cx="22" cy="34" r="7"/><path d="M28 40 C45 20, 65 20, 82 40"/><path d="M28 40 L24 78"/><path d="M34 42 L32 78"/><path d="M78 40 L84 78"/><path d="M72 42 L74 78"/>'],
+    childspose: ["Child's Pose", '<circle cx="76" cy="30" r="7"/><path d="M70 34 C50 40, 30 48, 20 62"/><path d="M70 34 C55 55, 40 66, 20 62"/><path d="M20 62 L20 76"/><path d="M35 66 L40 78"/>'],
+    cobra: ['Cobra Pose', '<circle cx="72" cy="34" r="7"/><path d="M66 40 C50 46, 38 50, 22 78"/><path d="M50 44 L44 62"/><path d="M58 40 L60 60"/>'],
+    pigeon: ['Pigeon Pose', '<circle cx="30" cy="28" r="7"/><path d="M32 34 L40 60"/><path d="M40 60 L78 66"/><path d="M40 60 L30 78"/><path d="M32 40 L58 46 L54 60"/>'],
+    forwardfold: ['Forward Fold', '<circle cx="50" cy="22" r="7"/><path d="M50 29 L58 52"/><path d="M58 52 L60 80"/><path d="M58 52 L36 60"/><path d="M36 60 L30 40"/>'],
+    seatedtwist: ['Seated Twist', '<circle cx="50" cy="24" r="7"/><path d="M50 31 L52 58"/><path d="M52 58 L30 74"/><path d="M52 58 L74 74"/><path d="M50 40 L74 34"/><path d="M50 44 L28 50"/>'],
+    legsupwall: ['Legs Up the Wall', '<circle cx="20" cy="60" r="7"/><path d="M27 60 L58 60"/><path d="M58 60 L58 22"/><path d="M58 60 L74 22"/>'],
+    neckroll: ['Neck Roll', '<circle cx="50" cy="34" r="9"/><path d="M50 43 L50 80"/><path d="M35 46 A18 14 0 0 0 50 20"/><path d="M46 22 L50 20 L52 26"/>'],
+    shoulder: ['Shoulder Stretch', '<circle cx="50" cy="22" r="7"/><path d="M50 29 L50 78"/><path d="M50 36 L78 30"/><path d="M50 40 L26 56 L30 72"/>'],
+  };
+  const fig = id => `<svg viewBox="0 0 100 100" ${ST}>${(POSES[id] || POSES.childspose)[1]}</svg>`;
+  const I = {
+    check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>',
+    play: '<svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M8 5v14l11-7z"/></svg>',
+    pause: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>',
+    fwd: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4l10 8-10 8V4z"/><path d="M19 5v14"/></svg>',
+    bwd: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M19 4L9 12l10 8V4z"/><path d="M5 5v14"/></svg>',
+    chev: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>',
+    left: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>',
+  };
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const fmt = s => Math.floor(s / 60) + ':' + String(Math.max(0, s) % 60).padStart(2, '0');
+  const totalSecs = r => r.poses.reduce((a, p) => a + p.secs, 0);
+  const dayKey = d => { const x = new Date(d); return x.getFullYear() + '-' + (x.getMonth() + 1) + '-' + x.getDate(); };
+
+  /* ---------- sample data (dates relative to today) ---------- */
+  function sample() {
+    const at = (daysAgo, h, m) => { const d = new Date(); d.setDate(d.getDate() - daysAgo); d.setHours(h, m, 0, 0); return d.toISOString(); };
+    return {
+      routines: [
+        { id: 'morning', name: 'Morning Mobility', color: 'sage', poses: [
+          { pose: 'catcow', name: 'Cat–Cow', cue: 'Move slow with your breath', secs: 20 },
+          { pose: 'childspose', name: "Child's Pose", cue: 'Sink your hips back', secs: 30 },
+          { pose: 'cobra', name: 'Cobra Pose', cue: 'Hold gently', secs: 25 },
+          { pose: 'pigeon', name: 'Pigeon Pose', cue: 'Square your hips', secs: 30 },
+          { pose: 'forwardfold', name: 'Forward Fold', cue: 'Let your head hang heavy', secs: 20 } ] },
+        { id: 'evening', name: 'Evening Wind-down', color: 'clay', poses: [
+          { pose: 'seatedtwist', name: 'Seated Twist', cue: 'Twist from your ribs, not shoulders', secs: 20 },
+          { pose: 'childspose', name: "Child's Pose", cue: 'Breathe into your back', secs: 30 },
+          { pose: 'legsupwall', name: 'Legs Up the Wall', cue: 'Relax your feet', secs: 40 } ] },
+        { id: 'office', name: 'Quick Office Stretch', color: 'sage', poses: [
+          { pose: 'neckroll', name: 'Neck Roll', cue: 'Slow, easy circles', secs: 15 },
+          { pose: 'shoulder', name: 'Shoulder Stretch', cue: 'Pull gently, don’t force it', secs: 20 },
+          { pose: 'seatedtwist', name: 'Seated Twist', cue: 'Sit tall as you turn', secs: 20 } ] },
+      ],
+      history: [
+        { routineId: 'evening', name: 'Evening Wind-down', completedAt: at(1, 21, 50), poses: 3, secs: 90 },
+        { routineId: 'office', name: 'Quick Office Stretch', completedAt: at(1, 14, 40), poses: 3, secs: 55 },
+        { routineId: 'morning', name: 'Morning Mobility', completedAt: at(2, 8, 12), poses: 5, secs: 125 },
+        { routineId: 'morning', name: 'Morning Mobility', completedAt: at(3, 7, 58), poses: 5, secs: 125 },
+        { routineId: 'office', name: 'Quick Office Stretch', completedAt: at(5, 15, 5), poses: 3, secs: 55 },
+      ],
+    };
+  }
+
+  /* ---------- validation ---------- */
+  function validate(d) {
+    const e = [];
+    if (!d || typeof d !== 'object' || Array.isArray(d)) return ['The top level must be an object with "routines" and "history".'];
+    if (!Array.isArray(d.routines)) e.push('"routines" must be a list ([ ... ]).');
+    else d.routines.forEach((r, i) => {
+      const at = `routines[${i}]`;
+      if (!r || typeof r !== 'object') { e.push(`${at} must be an object.`); return; }
+      if (typeof r.name !== 'string' || !r.name.trim()) e.push(`${at}.name must be non-empty text.`);
+      if (!Array.isArray(r.poses) || !r.poses.length) e.push(`${at}.poses must be a list with at least one pose.`);
+      else r.poses.forEach((p, j) => {
+        if (!p || typeof p !== 'object') { e.push(`${at}.poses[${j}] must be an object.`); return; }
+        if (typeof p.name !== 'string' || !p.name.trim()) e.push(`${at}.poses[${j}].name must be non-empty text.`);
+        if (!Number.isInteger(p.secs) || p.secs < 1 || p.secs > 600) e.push(`${at}.poses[${j}].secs must be a whole number from 1 to 600.`);
+      });
+    });
+    if (d.history !== undefined && !Array.isArray(d.history)) e.push('"history" must be a list ([ ... ]).');
+    else (d.history || []).forEach((h, i) => {
+      if (!h || isNaN(new Date(h.completedAt))) e.push(`history[${i}].completedAt must be a date like "2026-10-15T08:12:00Z".`);
+    });
+    return e;
+  }
+  function normalise(d) {
+    const ids = new Set();
+    d.routines.forEach((r, i) => {
+      if (typeof r.id !== 'string' || !r.id || ids.has(r.id)) r.id = 'r' + Date.now().toString(36) + i;
+      ids.add(r.id);
+      if (r.color !== 'clay') r.color = 'sage';
+      r.poses.forEach(p => { if (typeof p.cue !== 'string') p.cue = ''; if (typeof p.pose !== 'string') p.pose = 'childspose'; });
+    });
+    d.history = (d.history || []).slice().sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt));
+    return d;
+  }
+
+  /* ---------- storage ---------- */
+  const KEY = 'strtch-test-lab-v1';
+  function load() {
+    try { const raw = localStorage.getItem(KEY); if (raw) { const d = JSON.parse(raw); if (!validate(d).length) return normalise(d); } } catch (e) {}
+    return sample();
+  }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) {} }
+
+  let data = load();
+  let speed = 1;
+  let ui = { tab: 'home', view: 'home' };
+  let run = null, tick = null, draft = null;
+
+  const $ = id => document.getElementById(id);
+  const screen = $('screen'), tabbar = $('tabbar'), ta = $('json');
+
+  /* ---------- log ---------- */
+  const logEl = $('log');
+  function log(text) {
+    const li = document.createElement('li');
+    li.innerHTML = `<time>${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })}</time><span>${esc(text)}</span>`;
+    logEl.prepend(li);
+    while (logEl.children.length > 12) logEl.lastChild.remove();
+  }
+
+  /* ---------- JSON panel ---------- */
+  let dirty = false;
+  function setState(kind, text) { const s = $('jsonState'); s.className = 'state ' + kind; s.textContent = text; }
+  function syncJson(fromApp) {
+    if (dirty && fromApp) { $('staleBanner').hidden = false; return; }
+    ta.value = JSON.stringify(data, null, 2);
+    dirty = false; $('staleBanner').hidden = true; setState('ok', 'In sync');
+  }
+  function commit(msg) { save(); syncJson(true); if (msg) log(msg); }
+  ta.addEventListener('input', () => { dirty = true; setState('dirty', 'Edited — not applied'); });
+  function showMsg(kind, html) { const m = $('jsonMsg'); m.className = 'msg ' + kind; m.innerHTML = html; }
+  function applyText(text, source) {
+    let parsed;
+    try { parsed = JSON.parse(text); }
+    catch (err) { setState('bad', 'Invalid JSON'); showMsg('bad', `The JSON could not be read: ${esc(err.message)}. Check for a missing comma, quote or bracket near that spot.`); check('c6'); return; }
+    const errs = validate(parsed);
+    if (errs.length) { setState('bad', 'Not applied'); showMsg('bad', `Fix these and apply again:<ul>${errs.slice(0, 8).map(x => `<li>${esc(x)}</li>`).join('')}</ul>`); check('c6'); return; }
+    stopTick(); run = null;
+    data = normalise(parsed); dirty = false; save(); syncJson(false);
+    ui.view = ui.tab === 'progress' ? 'progress' : 'home'; render();
+    showMsg('ok', `Applied. ${data.routines.length} routine${data.routines.length === 1 ? '' : 's'}, ${data.history.length} session${data.history.length === 1 ? '' : 's'} in history.`);
+    log(`${source}: ${data.routines.length} routines, ${data.history.length} sessions`);
+    check('c5');
+  }
+  $('applyBtn').onclick = () => applyText(ta.value, 'Applied JSON');
+  $('formatBtn').onclick = () => { try { ta.value = JSON.stringify(JSON.parse(ta.value), null, 2); showMsg('', ''); } catch (e) { showMsg('bad', 'Tidy needs valid JSON first: ' + esc(e.message)); } };
+  $('discardBtn').onclick = () => { dirty = false; syncJson(false); showMsg('', ''); };
+  $('copyBtn').onclick = () => {
+    const done = () => showMsg('ok', 'Copied the JSON.');
+    const fallback = () => { ta.focus(); ta.select(); showMsg('', 'Text selected. Press Ctrl+C or ⌘C to copy.'); };
+    try { navigator.clipboard.writeText(ta.value).then(done, fallback); } catch (e) { fallback(); }
+  };
+  $('fileIn').onchange = e => {
+    const f = e.target.files[0]; if (!f) return;
+    const rd = new FileReader();
+    rd.onload = () => { ta.value = rd.result; applyText(rd.result, 'Loaded ' + f.name); };
+    rd.readAsText(f); e.target.value = '';
+  };
+  $('resetBtn').onclick = () => { $('resetConfirm').hidden = false; };
+  $('resetNo').onclick = () => { $('resetConfirm').hidden = true; };
+  $('resetYes').onclick = () => { $('resetConfirm').hidden = true; dirty = false; applyText(JSON.stringify(sample()), 'Reset to sample'); };
+
+  /* checklist (remembered per browser) */
+  const CK = 'strtch-test-lab-checks';
+  let checks = {}; try { checks = JSON.parse(localStorage.getItem(CK)) || {}; } catch (e) {}
+  document.querySelectorAll('#checks input').forEach(cb => {
+    cb.checked = !!checks[cb.id];
+    cb.onchange = () => { checks[cb.id] = cb.checked; try { localStorage.setItem(CK, JSON.stringify(checks)); } catch (e) {} };
+  });
+  function check(id) { const cb = $(id); if (cb && !cb.checked) { cb.checked = true; cb.onchange(); } }
+
+  /* speed */
+  $('speedSeg').onclick = e => {
+    const b = e.target.closest('button[data-speed]'); if (!b) return;
+    speed = +b.dataset.speed;
+    document.querySelectorAll('#speedSeg button').forEach(x => x.setAttribute('aria-pressed', x === b));
+    if (run && run.running) startTick();
+    log(`Timer speed set to ${speed}×`);
+  };
+
+  /* ---------- navigation ---------- */
+  tabbar.onclick = e => {
+    const b = e.target.closest('button[data-tab]'); if (!b) return;
+    if (run) { stopTick(); run = null; log('Left the routine early'); }
+    ui.tab = b.dataset.tab; ui.view = ui.tab; render();
+  };
+  function go(view) { ui.view = view; render(); screen.scrollTop = 0; }
+
+  function render() {
+    tabbar.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.tab === ui.tab));
+    tabbar.hidden = ui.view === 'timer';
+    ({ home: vHome, pick: vPick, timer: vTimer, done: vDone, progress: vProgress, create: vCreate })[ui.view]();
+  }
+
+  const card = r => `<button type="button" class="rcard" data-id="${esc(r.id)}">
+      <span class="sw" style="background:var(${r.color === 'clay' ? '--clay-100' : '--sage-200'})">${fig(r.poses[0].pose)}</span>
+      <span class="rmeta"><span class="rtitle" style="display:block">${esc(r.name)}</span>
+      <span class="rsub" style="display:block">${Math.max(1, Math.round(totalSecs(r) / 60))} min · ${r.poses.length} pose${r.poses.length === 1 ? '' : 's'}</span></span>
+      <span class="go">${I.chev}</span></button>`;
+  const list = () => data.routines.length
+    ? `<div class="rlist">${data.routines.map(card).join('')}</div>`
+    : `<div class="empty">No routines yet. Tap “Create routine”, or add one in the JSON panel.</div>`;
+  function bindCards() { screen.querySelectorAll('.rcard').forEach(c => c.onclick = () => begin(c.dataset.id)); }
+
+  function vHome() {
+    screen.innerHTML = `<div class="pad">
+      <p class="eyebrow">Today · daily movement</p>
+      <h2 class="hero">Ready to<br>stretch?</h2>
+      <p class="sub">A few quiet minutes can change how the whole day feels.</p>
+      <button type="button" class="btn btn-primary" id="startBtn" ${data.routines.length ? '' : 'disabled'}>${I.play} Start a routine</button>
+      <div class="btn-row"><button type="button" class="btn btn-sec" id="createBtn">+ Create routine</button><button type="button" class="btn btn-sec" disabled title="Not in this test build">Import video</button></div>
+      <div class="label"><span>Your routines</span><span>${data.routines.length}</span></div>
+      ${list()}</div>`;
+    $('startBtn').onclick = () => go('pick');
+    $('createBtn').onclick = () => { draft = { name: '', poses: [] }; go('create'); };
+    bindCards();
+  }
+  function vPick() {
+    screen.innerHTML = `<div class="pad"><button type="button" class="back" id="bk">${I.left} Back</button>
+      <h2 class="hero" style="font-size:34px">Pick a routine</h2><p class="sub">Tap one to start the timer right away.</p>${list()}</div>`;
+    $('bk').onclick = () => go('home'); bindCards();
+  }
+
+  /* ---------- create ---------- */
+  function vCreate() {
+    const d = draft;
+    screen.innerHTML = `<div class="pad"><button type="button" class="back" id="bk">${I.left} Cancel</button>
+      <h2 class="hero" style="font-size:34px">New routine</h2>
+      <div class="field"><label for="rc-name">Name</label><input id="rc-name" maxlength="40" placeholder="e.g. Lunch break reset" value="${esc(d.name)}"></div>
+      <div class="field"><label>Poses (${d.poses.length}) · ${fmt(d.poses.reduce((a, p) => a + p.secs, 0))} total</label>
+        <div class="plist">${d.poses.length ? d.poses.map((p, i) => `<div class="prow"><span class="sw" style="width:30px;height:30px;border-radius:9px;background:var(--sage-200)">${fig(p.pose)}</span><span class="n">${esc(p.name)}</span><input id="rc-secs-${i}" type="number" min="1" max="600" value="${p.secs}" data-i="${i}" aria-label="Seconds for ${esc(p.name)}"><span class="s">s</span><button type="button" class="x" data-rm="${i}" aria-label="Remove ${esc(p.name)}">×</button></div>`).join('') : '<div class="empty" style="padding:12px">Tap a pose below to add it.</div>'}</div>
+      </div>
+      <div class="field"><label>Add a pose</label><div class="chips">${Object.keys(POSES).map(k => `<button type="button" class="chip" data-add="${k}">${fig(k)}${esc(POSES[k][0])}</button>`).join('')}</div></div>
+      <div class="formerr" id="formErr"></div>
+      <button type="button" class="btn btn-primary" id="saveR">Save routine</button></div>`;
+    $('bk').onclick = () => { draft = null; go('home'); };
+    $('rc-name').oninput = e => d.name = e.target.value;
+    screen.querySelectorAll('[data-add]').forEach(b => b.onclick = () => { d.poses.push({ pose: b.dataset.add, name: POSES[b.dataset.add][0], cue: '', secs: 30 }); keepScroll(vCreate); });
+    screen.querySelectorAll('[data-rm]').forEach(b => b.onclick = () => { d.poses.splice(+b.dataset.rm, 1); keepScroll(vCreate); });
+    screen.querySelectorAll('.prow input').forEach(inp => inp.oninput = () => { d.poses[+inp.dataset.i].secs = parseInt(inp.value, 10) || 0; });
+    $('saveR').onclick = () => {
+      const err = !d.name.trim() ? 'Give the routine a name.' : !d.poses.length ? 'Add at least one pose.'
+        : d.poses.some(p => !(p.secs >= 1 && p.secs <= 600)) ? 'Each pose needs 1 to 600 seconds.' : '';
+      if (err) { $('formErr').textContent = err; return; }
+      const r = { id: 'r' + Date.now().toString(36), name: d.name.trim(), color: data.routines.length % 2 ? 'sage' : 'clay', poses: d.poses.map(p => ({ ...p })) };
+      data.routines.push(r); draft = null;
+      commit(`Created routine “${r.name}” with ${r.poses.length} poses`);
+      check('c3'); go('home');
+    };
+  }
+  function keepScroll(fn) { const y = screen.scrollTop; fn(); screen.scrollTop = y; }
+
+  /* ---------- timer ---------- */
+  function begin(id) {
+    const r = data.routines.find(x => x.id === id); if (!r) return;
+    run = { r: JSON.parse(JSON.stringify(r)), i: 0, left: r.poses[0].secs, running: true, skipped: 0, used: 0, sub: 0 };
+    log(`Started “${r.name}”`);
+    go('timer'); startTick();
+  }
+  function startTick() {
+    stopTick();
+    tick = setInterval(() => {
+      run.left -= 1; run.used += 1;
+      if (run.left <= 0) next(false); else paint();
+    }, 1000 / speed);
+  }
+  function stopTick() { if (tick) clearInterval(tick); tick = null; }
+  function next(manual) {
+    if (manual) { run.skipped += 1; log(`Skipped “${run.r.poses[run.i].name}”`); check('c2'); }
+    if (run.i < run.r.poses.length - 1) { run.i += 1; run.left = run.r.poses[run.i].secs; vTimer(); }
+    else finish();
+  }
+  function prev() {
+    if (run.i > 0) run.i -= 1;
+    run.left = run.r.poses[run.i].secs; vTimer(); check('c2');
+    log(`Went back to “${run.r.poses[run.i].name}”`);
+  }
+  function finish() {
+    stopTick();
+    const r = run.r;
+    const entry = { routineId: r.id, name: r.name, completedAt: new Date().toISOString(), poses: r.poses.length - run.skipped, secs: run.used };
+    data.history.unshift(entry);
+    run.result = entry;
+    commit(`Finished “${r.name}”: ${entry.poses} poses, ${fmt(entry.secs)}`);
+    check('c1');
+    go('done');
+  }
+  function pct() {
+    const tot = totalSecs(run.r);
+    const doneS = run.r.poses.slice(0, run.i).reduce((a, p) => a + p.secs, 0) + (run.r.poses[run.i].secs - run.left);
+    return Math.min(100, Math.round(doneS / tot * 100));
+  }
+  const R = 82, C = 2 * Math.PI * R;
+  function vTimer() {
+    const p = run.r.poses[run.i], n = run.r.poses[run.i + 1];
+    screen.innerHTML = `<div class="timer">
+      <div class="timer-top"><button type="button" class="back" id="exit">${I.left} Exit</button>
+        <div class="track"><div class="fill" id="fill"></div></div><div class="cap" id="cap"></div></div>
+      <div class="tmid">
+        <div class="ring"><svg viewBox="0 0 190 190"><circle class="ring-bg" cx="95" cy="95" r="${R}"/><circle class="ring-fg" id="ringFg" cx="95" cy="95" r="${R}" stroke-dasharray="${C}"/></svg>
+          <div class="ring-fig">${fig(p.pose)}</div></div>
+        <h2 class="pname">${esc(p.name)}</h2>${p.cue ? `<p class="pcue">${esc(p.cue)}</p>` : ''}
+        <div class="ptime" id="ptime"></div>
+        <div class="pnext">${n ? 'Next: ' + esc(n.name) : 'Last pose'} · ${run.i + 1} of ${run.r.poses.length}</div>
+      </div>
+      <div class="ctrls">
+        <div class="ccol"><button type="button" class="cbtn" id="prv" aria-label="Previous pose">${I.bwd}</button>Back</div>
+        <div class="ccol"><button type="button" class="cbtn cmain" id="pp"></button><span id="ppl"></span></div>
+        <div class="ccol"><button type="button" class="cbtn" id="nxt" aria-label="Skip pose">${I.fwd}</button>Skip</div>
+      </div></div>`;
+    $('exit').onclick = () => { stopTick(); log(`Exited “${run.r.name}” at ${pct()}%`); run = null; go('home'); };
+    $('pp').onclick = () => {
+      run.running = !run.running;
+      if (run.running) startTick(); else stopTick();
+      log(run.running ? 'Resumed' : 'Paused'); check('c2'); paint();
+    };
+    $('nxt').onclick = () => next(true);
+    $('prv').onclick = prev;
+    paint();
+  }
+  function paint() {
+    if (!run || ui.view !== 'timer') return;
+    const p = run.r.poses[run.i];
+    $('ptime').textContent = fmt(run.left);
+    $('ringFg').setAttribute('stroke-dashoffset', C * (run.left / p.secs));
+    const v = pct(); $('fill').style.width = v + '%'; $('cap').textContent = v + '% complete';
+    $('pp').innerHTML = run.running ? I.pause : I.play.replace(' width="16" height="16"', '');
+    $('pp').setAttribute('aria-label', run.running ? 'Pause' : 'Resume');
+    $('ppl').textContent = run.running ? 'Pause' : 'Resume';
+  }
+
+  function vDone() {
+    const e = run.result, today = data.history.filter(h => dayKey(h.completedAt) === dayKey(new Date())).length;
+    screen.innerHTML = `<div class="done"><div class="badge">${I.check}</div>
+      <h2 class="hero" style="font-size:36px">Nice work!</h2>
+      <p class="sub" style="margin:0">You finished ${esc(e.name)}. That's one more small thing your body will thank you for.</p>
+      <div class="stats"><div class="stat"><b>${e.poses}</b><span>poses done</span></div><div class="stat"><b>${fmt(e.secs)}</b><span>time held</span></div><div class="stat"><b>${today}</b><span>today</span></div></div>
+      <button type="button" class="btn btn-primary" id="hm">Back to home</button>
+      <button type="button" class="btn btn-sec" id="pg" style="width:100%;margin-top:10px">See progress</button></div>`;
+    $('hm').onclick = () => { run = null; go('home'); };
+    $('pg').onclick = () => { run = null; check('c4'); ui.tab = 'progress'; go('progress'); };
+  }
+
+  /* ---------- progress (computed from history) ---------- */
+  function vProgress() {
+    const days = new Set(data.history.map(h => dayKey(h.completedAt)));
+    const now = new Date(), mon = new Date(now); mon.setHours(0, 0, 0, 0); mon.setDate(mon.getDate() - ((mon.getDay() + 6) % 7));
+    const week = [...Array(7)].map((_, i) => { const d = new Date(mon); d.setDate(mon.getDate() + i); return d; });
+    let streak = 0; const c = new Date(now);
+    if (!days.has(dayKey(c))) c.setDate(c.getDate() - 1);
+    while (days.has(dayKey(c))) { streak++; c.setDate(c.getDate() - 1); }
+    const thisWeek = week.filter(d => days.has(dayKey(d))).length;
+    const when = iso => {
+      const d = new Date(iso), diff = Math.round((new Date(dayKey(now)) - new Date(dayKey(d))) / 864e5);
+      const t = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+      return diff === 0 ? `Today, ${t}` : diff === 1 ? `Yesterday, ${t}` : diff < 7 ? `${diff} days ago` : d.toLocaleDateString([], { day: 'numeric', month: 'short' });
+    };
+    const iconFor = h => { const r = data.routines.find(x => x.id === h.routineId); return r ? r.poses[0].pose : 'childspose'; };
+    screen.innerHTML = `<div class="pad"><p class="eyebrow">This week · ${thisWeek} of 7 days</p>
+      <h2 class="hero" style="font-size:34px">Your progress</h2>
+      <div class="week">${week.map(d => `<div class="day ${days.has(dayKey(d)) ? 'on' : ''} ${dayKey(d) === dayKey(now) ? 'today' : ''}"><div class="dot">${days.has(dayKey(d)) ? I.check : ''}</div><span>${'MTWTFSS'[(d.getDay() + 6) % 7]}</span></div>`).join('')}</div>
+      <div class="streak"><b>${streak}</b><span>${streak === 1 ? 'day' : 'days'} in a row. ${streak ? 'One more session tomorrow keeps it going.' : 'Finish a routine today to start a streak.'}</span></div>
+      <div class="label"><span>Recent sessions</span><span>${data.history.length} total</span></div>
+      ${data.history.length ? data.history.slice(0, 8).map(h => `<div class="hrow"><div class="hicon">${fig(iconFor(h))}</div><div style="min-width:0"><div class="hname">${esc(h.name || 'Routine')}</div><div class="hwhen">${when(h.completedAt)}${h.secs ? ' · ' + fmt(h.secs) : ''}</div></div></div>`).join('') : '<div class="empty">No sessions yet. Finish a routine and it shows up here.</div>'}
+    </div>`;
+  }
+
+  syncJson(false);
+  render();
+  log('Test lab opened with ' + data.routines.length + ' routines');
+})();
+</script>
+
+</body>
+</html>

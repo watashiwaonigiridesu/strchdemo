@@ -1,0 +1,128 @@
+{
+  "routines": [
+    {
+      "id": "morning",
+      "name": "Morning Mobility",
+      "color": "sage",
+      "poses": [
+        {
+          "pose": "catcow",
+          "name": "Cat–Cow",
+          "cue": "Move slow with your breath",
+          "secs": 20
+        },
+        {
+          "pose": "childspose",
+          "name": "Child's Pose",
+          "cue": "Sink your hips back",
+          "secs": 30
+        },
+        {
+          "pose": "cobra",
+          "name": "Cobra Pose",
+          "cue": "Hold gently",
+          "secs": 25
+        },
+        {
+          "pose": "pigeon",
+          "name": "Pigeon Pose",
+          "cue": "Square your hips",
+          "secs": 30
+        },
+        {
+          "pose": "forwardfold",
+          "name": "Forward Fold",
+          "cue": "Let your head hang heavy",
+          "secs": 20
+        }
+      ]
+    },
+    {
+      "id": "evening",
+      "name": "Evening Wind-down",
+      "color": "clay",
+      "poses": [
+        {
+          "pose": "seatedtwist",
+          "name": "Seated Twist",
+          "cue": "Twist from your ribs, not shoulders",
+          "secs": 20
+        },
+        {
+          "pose": "childspose",
+          "name": "Child's Pose",
+          "cue": "Breathe into your back",
+          "secs": 30
+        },
+        {
+          "pose": "legsupwall",
+          "name": "Legs Up the Wall",
+          "cue": "Relax your feet",
+          "secs": 40
+        }
+      ]
+    },
+    {
+      "id": "office",
+      "name": "Quick Office Stretch",
+      "color": "sage",
+      "poses": [
+        {
+          "pose": "neckroll",
+          "name": "Neck Roll",
+          "cue": "Slow, easy circles",
+          "secs": 15
+        },
+        {
+          "pose": "shoulder",
+          "name": "Shoulder Stretch",
+          "cue": "Pull gently, don’t force it",
+          "secs": 20
+        },
+        {
+          "pose": "seatedtwist",
+          "name": "Seated Twist",
+          "cue": "Sit tall as you turn",
+          "secs": 20
+        }
+      ]
+    }
+  ],
+  "history": [
+    {
+      "routineId": "evening",
+      "name": "Evening Wind-down",
+      "completedAt": "2026-10-14T14:50:00.000Z",
+      "poses": 3,
+      "secs": 90
+    },
+    {
+      "routineId": "office",
+      "name": "Quick Office Stretch",
+      "completedAt": "2026-10-14T07:40:00.000Z",
+      "poses": 3,
+      "secs": 55
+    },
+    {
+      "routineId": "morning",
+      "name": "Morning Mobility",
+      "completedAt": "2026-10-13T01:12:00.000Z",
+      "poses": 5,
+      "secs": 125
+    },
+    {
+      "routineId": "morning",
+      "name": "Morning Mobility",
+      "completedAt": "2026-10-12T00:58:00.000Z",
+      "poses": 5,
+      "secs": 125
+    },
+    {
+      "routineId": "office",
+      "name": "Quick Office Stretch",
+      "completedAt": "2026-10-10T08:05:00.000Z",
+      "poses": 3,
+      "secs": 55
+    }
+  ]
+}
