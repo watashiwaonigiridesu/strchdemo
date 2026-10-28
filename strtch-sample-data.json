@@ -15,6 +15,7 @@
           "pose": "childspose",
           "name": "Child's Pose",
           "cue": "Sink your hips back",
+          "voice": "Sink your hips back. Make sure you feel that stretch in your back, with your chest resting toward the ground.",
           "secs": 30
         },
         {
@@ -52,6 +53,7 @@
           "pose": "childspose",
           "name": "Child's Pose",
           "cue": "Breathe into your back",
+          "voice": "Breathe into your back. Make sure you feel that stretch in your back, with your chest resting toward the ground.",
           "secs": 30
         },
         {
